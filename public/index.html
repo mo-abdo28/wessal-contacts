@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Wessal team contacts directory" />
+  <meta name="theme-color" content="#0f766e" />
+  <title>Wessal — دليل جهات الاتصال</title>
+
+  <!-- Fonts: Cairo (Arabic-friendly) + Inter (Latin) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f766e'/%3E%3Ctext x='32' y='44' font-family='Cairo,sans-serif' font-size='34' font-weight='700' fill='white' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+
+<!-- ==================================================================
+     LOGIN SCREEN  (username + password only — no sign-up, no reset)
+     ================================================================== -->
+<section id="login-screen" class="auth" hidden>
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="logo-badge" aria-hidden="true">W</div>
+      <div>
+        <h1 data-i18n="app.title">Wessal</h1>
+        <p class="muted" data-i18n="app.tagline">دليل جهات الاتصال</p>
+      </div>
+    </div>
+
+    <p class="auth-note" data-i18n="auth.subtitle">سجّل الدخول بحساب فريقك</p>
+
+    <form id="login-form" novalidate>
+      <label class="field">
+        <span class="field-label" data-i18n="auth.username">اسم المستخدم</span>
+        <input id="login-username" name="username" type="text" autocomplete="username"
+               autocapitalize="none" spellcheck="false" data-i18n-placeholder="auth.usernamePlaceholder"
+               placeholder="wessal" required />
+      </label>
+
+      <label class="field">
+        <span class="field-label" data-i18n="auth.password">كلمة المرور</span>
+        <span class="pw-wrap">
+          <input id="login-password" name="password" type="password" autocomplete="current-password"
+                 data-i18n-placeholder="auth.passwordPlaceholder" placeholder="••••••••" required />
+          <button type="button" class="pw-toggle" id="pw-toggle" data-i18n-aria="auth.showPassword"
+                  aria-label="Show password">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 5c-5 0-9.3 3.1-11 7 1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9Zm0-2A2.5 2.5 0 1 0 12 9.5a2.5 2.5 0 0 0 0 5Z"/></svg>
+          </button>
+        </span>
+      </label>
+
+      <p id="login-error" class="error-text" role="alert" hidden></p>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" id="login-submit">
+        <span data-i18n="auth.signIn">تسجيل الدخول</span>
+      </button>
+    </form>
+
+    <p class="auth-foot muted" data-i18n="auth.help">تحتاج إلى حساب؟ تواصل مع مدير النظام.</p>
+  </div>
+</section>
+
+<!-- ==================================================================
+     MAIN APP
+     ================================================================== -->
+<div id="app" class="app" hidden>
+
+  <!-- ---------- Header ---------- -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo-badge sm" aria-hidden="true">W</div>
+        <div class="brand-text">
+          <strong data-i18n="app.title">Wessal</strong>
+          <small class="muted" data-i18n="app.tagline">دليل جهات الاتصال</small>
+        </div>
+      </div>
+
+      <div class="topbar-search">
+        <svg class="search-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 1 0 4.9 14.32l5.39 5.39 1.42-1.42-5.39-5.39A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"/></svg>
+        <input id="search" type="search" autocomplete="off" data-i18n-placeholder="search.placeholder"
+               placeholder="ابحث بالاسم أو الجهة أو الرقم" aria-label="Search" />
+        <button class="clear-btn" id="search-clear" type="button" hidden aria-label="Clear">&times;</button>
+      </div>
+
+      <div class="topbar-actions">
+        <span class="role-chip" id="role-chip" hidden>
+          <span data-i18n="header.role">الصلاحية</span>
+          <strong id="role-chip-text">Admin</strong>
+        </span>
+
+        <button class="icon-btn" id="lang-toggle" type="button" aria-label="Language">
+          <span id="lang-label">EN</span>
+        </button>
+
+        <button class="icon-btn" id="theme-toggle" type="button" data-i18n-aria="header.theme"
+                aria-label="Toggle dark mode">
+          <svg class="ico-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-13a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1Zm0 14a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1ZM3 11h2a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2Zm16 0h2a1 1 0 1 1 0 2h-2a1 1 0 1 1 0-2ZM5.6 5.6 7 7a1 1 0 0 1-1.4 1.4l-1.4-1.4a1 1 0 0 1 1.4-1.4Zm12.8 12.8L20 20a1 1 0 0 1-1.4-1.4l1.4-1.4a1 1 0 0 1 1.4 1.4ZM18.4 7l1.4-1.4A1 1 0 0 0 17.4 7L16 8.4A1 1 0 1 1 14.6 7ZM7 16.6 5.6 18A1 1 0 0 0 7 19.4l1.4-1.4A1 1 0 0 0 7 16.6Z"/></svg>
+          <svg class="ico-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M21 13a9 9 0 1 1-10-10 7 7 0 0 0 10 10Z"/></svg>
+        </button>
+
+        <button class="icon-btn" id="admin-open" type="button" hidden
+                data-i18n-aria="header.adminTools" aria-label="Admin tools">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2 3 6v6c0 5.2 3.8 9.9 9 10.9 5.2-1 9-5.7 9-10.9V6l-9-4Zm0 2.2 7 3.1V12c0 4.2-2.9 8.1-7 9.1-4.1-1-7-4.9-7-9.1V7.3l7-3.1Zm-1 4.3a1 1 0 0 0-1 1v3.5H7a1 1 0 1 0 0 2h3v3.5a1 1 0 1 0 2 0V13h3a1 1 0 1 0 0-2h-3V9.5a1 1 0 0 0-1-1Z"/></svg>
+        </button>
+
+        <button class="icon-btn" id="logout" type="button" data-i18n-aria="header.logout" aria-label="Log out">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5v-2H5V5h5V3Zm6.2 4.4-1.4 1.4L17.2 11H9v2h8.2l-2.4 2.2 1.4 1.4L21 12l-4.8-4.6Z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ---------- Offline preview banner ---------- -->
+    <div class="preview-banner" id="preview-banner" hidden>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2 1 21h22L12 2Zm1 14h-2v2h2v-2Zm0-7h-2v5h2V9Z"/></svg>
+      <span data-i18n="preview.banner">وضع المعاينة بدون قاعدة بيانات — البيانات محفوظة على هذا الجهاز فقط.</span>
+      <span class="preview-role">
+        <span data-i18n="preview.role">معاينة كـ</span>
+        <select id="preview-role">
+          <option value="admin" data-i18n="role.admin">مدير</option>
+          <option value="member" data-i18n="role.member">عضو</option>
+        </select>
+      </span>
+    </div>
+  </header>
+
+  <!-- ---------- Main content ---------- -->
+  <main class="content">
+    <section class="stats" id="stats" aria-label="Statistics">
+      <div class="stat stat-total">
+        <span class="stat-value" id="stat-total">0</span>
+        <span class="stat-label" data-i18n="stats.total">الإجمالي</span>
+      </div>
+      <div class="stat stat-wa">
+        <span class="stat-value" id="stat-wa">0</span>
+        <span class="stat-label" data-i18n="stats.withWa">متوفر واتساب</span>
+      </div>
+      <div class="stat stat-nowa">
+        <span class="stat-value" id="stat-nowa">0</span>
+        <span class="stat-label" data-i18n="stats.withoutWa">بدون واتساب</span>
+      </div>
+    </section>
+
+    <section class="cat-chips" id="cat-chips" aria-label="Categories"></section>
+
+    <section class="toolbar">
+      <div class="filters">
+        <label class="select-wrap">
+          <span class="sr-only" data-i18n="filters.whatsapp">واتساب</span>
+          <select id="filter-wa">
+            <option value="all" data-i18n="filters.all">الكل</option>
+            <option value="yes" data-i18n="filters.withWa">متوفر واتساب</option>
+            <option value="no" data-i18n="filters.withoutWa">بدون واتساب</option>
+          </select>
+        </label>
+
+        <label class="select-wrap">
+          <span class="sr-only" data-i18n="filters.category">الفئة</span>
+          <select id="filter-cat"><option value="all" data-i18n="filters.allCategories">كل الفئات</option></select>
+        </label>
+
+        <label class="select-wrap">
+          <span class="sr-only" data-i18n="filters.sort">الترتيب</span>
+          <select id="filter-sort">
+            <option value="name" data-i18n="filters.sortName">الاسم (أ-ي)</option>
+            <option value="newest" data-i18n="filters.sortNewest">الأحدث أولاً</option>
+            <option value="category" data-i18n="filters.sortCategory">الفئة</option>
+          </select>
+        </label>
+      </div>
+
+      <button class="btn btn-primary add-top only-desktop" id="add-top" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>
+        <span data-i18n="btn.add">إضافة جهة اتصال</span>
+      </button>
+    </section>
+
+    <p class="result-count" id="result-count" hidden></p>
+
+    <!-- Mobile: cards -->
+    <section class="cards" id="cards"></section>
+
+    <!-- Desktop: table -->
+    <section class="table-wrap">
+      <table class="table" id="table">
+        <thead>
+          <tr>
+            <th data-i18n="col.name">الاسم</th>
+            <th data-i18n="col.org">الجهة</th>
+            <th data-i18n="col.phone">الهاتف</th>
+            <th data-i18n="col.wa">واتساب</th>
+            <th data-i18n="col.category">الفئة</th>
+            <th data-i18n="col.notes">ملاحظات</th>
+            <th data-i18n="col.added">أُضيف بواسطة</th>
+            <th data-i18n="col.actions">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </section>
+
+    <!-- Empty state -->
+    <section class="empty" id="empty" hidden>
+      <div class="empty-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="40" height="40"><path fill="currentColor" d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5-8-5V6l8 5 8-5v2Z"/></svg>
+      </div>
+      <h3 id="empty-title" data-i18n="empty.title">لا توجد جهات اتصال بعد</h3>
+      <p class="muted" id="empty-body" data-i18n="empty.body">اضغط + لإضافة أول جهة اتصال.</p>
+    </section>
+  </main>
+
+  <!-- ---------- Floating add button (mobile) ---------- -->
+  <button class="fab" id="fab-add" type="button" data-i18n-aria="btn.add" aria-label="Add contact">
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>
+  </button>
+
+  <!-- ---------- Admin panel ---------- -->
+  <section class="sheet" id="admin-panel" hidden aria-modal="true" role="dialog">
+    <div class="sheet-scrim" data-close-admin></div>
+    <div class="sheet-panel">
+      <header class="sheet-head">
+        <h2 data-i18n="admin.title">أدوات الإدارة</h2>
+        <button class="icon-btn" type="button" data-close-admin aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet-body">
+        <div class="admin-grid">
+          <button class="admin-card" id="admin-import" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 3v10.6l3.3-3.3 1.4 1.4-5.7 5.7-5.7-5.7 1.4-1.4L10 13.6V3h2ZM4 19h16v2H4v-2Z"/></svg>
+            <strong data-i18n="admin.import">استيراد</strong>
+            <span class="muted" data-i18n="admin.importDesc">من ملف CSV أو Excel</span>
+          </button>
+          <button class="admin-card" id="admin-export" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 21V10.4L8.7 13.7 7.3 12.3 12 7.6l4.7 4.7-1.4 1.4L12 10.4V21h2ZM4 3h16v2H4V3Z"/></svg>
+            <strong data-i18n="admin.export">تصدير</strong>
+            <span class="muted" data-i18n="admin.exportDesc">تصدير الكل CSV / Excel</span>
+          </button>
+          <button class="admin-card" id="admin-cats" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2 2 7l10 5 8.2-4.1V15h2V7L12 2ZM4 11.7V16c0 1.7 3.6 3 8 3s8-1.3 8-3v-4.3l-8 4-8-4Z"/></svg>
+            <strong data-i18n="admin.cats">إدارة الفئات</strong>
+            <span class="muted" data-i18n="admin.catsDesc">إضافة أو تعديل الفئات</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Contact add / edit sheet ---------- -->
+  <section class="sheet" id="contact-sheet" hidden aria-modal="true" role="dialog">
+    <div class="sheet-scrim" data-close-contact></div>
+    <div class="sheet-panel">
+      <header class="sheet-head">
+        <h2 id="contact-sheet-title" data-i18n="form.addTitle">إضافة جهة اتصال</h2>
+        <button class="icon-btn" type="button" data-close-contact aria-label="Close">&times;</button>
+      </header>
+
+      <form id="contact-form" class="sheet-body" novalidate>
+        <div class="field">
+          <label class="field-label" for="f-name" data-i18n="form.name">الاسم</label>
+          <input id="f-name" name="name" type="text" autocomplete="off"
+                 data-i18n-placeholder="form.namePlaceholder" placeholder="اسم الشخص" />
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="f-org" data-i18n="form.org">الجهة / المؤسسة</label>
+          <input id="f-org" name="organization" type="text" autocomplete="off"
+                 data-i18n-placeholder="form.orgPlaceholder" placeholder="اسم الجهة" />
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="f-phone" data-i18n="form.phone">رقم الهاتف</label>
+          <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="off" dir="ltr"
+                 data-i18n-placeholder="form.phonePlaceholder" placeholder="010xxxxxxxx" required />
+          <small class="hint" id="phone-hint" data-i18n="form.phoneHint">سنحول الرقم تلقائياً إلى صيغة دولية.</small>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="f-phone2" data-i18n="form.phone2">رقم ثانٍ (اختياري)</label>
+          <input id="f-phone2" name="phone2" type="tel" inputmode="tel" autocomplete="off" dir="ltr"
+                 data-i18n-placeholder="form.phone2Placeholder" placeholder="011xxxxxxxx" />
+        </div>
+
+        <div class="field">
+          <span class="field-label" data-i18n="form.wa">هل يوجد واتساب؟</span>
+          <div class="segmented" role="radiogroup" id="f-wa-group">
+            <button type="button" class="seg active" data-wa="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.7 15L2 22l5.2-1.3A10 10 0 1 0 12 2Zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .1-3.2-.9-2.7-1.2-4.4-4-4.6-4.2-.1-.2-1-1.4-1-2.6s.6-1.8.9-2.1c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.5c-.1.2-.3.3-.1.6.1.3.6 1.1 1.3 1.7.9.8 1.6 1 1.9 1.1.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.6-.1l1.9.9c.2.1.4.2.4.3.1.2.1.7-.1 1.3Z"/></svg>
+              <span data-i18n="form.yes">نعم</span>
+            </button>
+            <button type="button" class="seg" data-wa="false">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.7 15L2 22l5.2-1.3A10 10 0 1 0 12 2Zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .1-3.2-.9-2.7-1.2-4.4-4-4.6-4.2-.1-.2-1-1.4-1-2.6s.6-1.8.9-2.1c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.5c-.1.2-.3.3-.1.6.1.3.6 1.1 1.3 1.7.9.8 1.6 1 1.9 1.1.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.6-.1l1.9.9c.2.1.4.2.4.3.1.2.1.7-.1 1.3Z"/></svg>
+              <span data-i18n="form.no">لا</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="f-cat" data-i18n="form.category">الفئة</label>
+          <select id="f-cat" name="category"></select>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="f-notes" data-i18n="form.notes">ملاحظات (اختياري)</label>
+          <textarea id="f-notes" name="notes" rows="2" data-i18n-placeholder="form.notesPlaceholder"
+                    placeholder="أي تفاصيل إضافية"></textarea>
+        </div>
+
+        <div class="dup-warning" id="dup-warning" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2 1 21h22L12 2Zm1 14h-2v2h2v-2Zm0-7h-2v5h2V9Z"/></svg>
+          <div>
+            <strong data-i18n="dup.title">هذا الرقم مسجّل بالفعل</strong>
+            <span id="dup-text"></span>
+          </div>
+        </div>
+
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-ghost" data-close-contact data-i18n="btn.cancel">إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="contact-save">
+            <span data-i18n="btn.save">حفظ</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ---------- Import sheet ---------- -->
+  <section class="sheet" id="import-sheet" hidden aria-modal="true" role="dialog">
+    <div class="sheet-scrim" data-close-import></div>
+    <div class="sheet-panel wide">
+      <header class="sheet-head">
+        <h2 data-i18n="import.title">استيراد جهات الاتصال</h2>
+        <button class="icon-btn" type="button" data-close-import aria-label="Close">&times;</button>
+      </header>
+
+      <div class="sheet-body">
+        <div class="import-steps" id="import-steps">
+          <span class="step active" data-step="1" data-i18n="import.step1">1. اختر الملف</span>
+          <span class="step" data-step="2" data-i18n="import.step2">2. طابِق الأعمدة</span>
+          <span class="step" data-step="3" data-i18n="import.step3">3. عاين واستورد</span>
+        </div>
+
+        <div class="import-pane" id="import-pane-1">
+          <label class="dropzone" id="dropzone">
+            <input type="file" id="file-input" class="file-input" accept=".csv,.xlsx,.xls,.txt" />
+            <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 3v10.6l3.3-3.3 1.4 1.4-5.7 5.7-5.7-5.7 1.4-1.4L10 13.6V3h2ZM4 19h16v2H4v-2Z"/></svg>
+            <strong data-i18n="import.choose">اختر ملف CSV أو Excel</strong>
+            <span class="muted" data-i18n="import.chooseHint">أو اسحبه وأفلته هنا</span>
+          </label>
+          <p class="hint" data-i18n="import.sheetHint">اقرأ فقط ورقة &quot;Contacts&quot; من ملف Excel إن وُجدت أكثر من ورقة.</p>
+        </div>
+
+        <div class="import-pane" id="import-pane-2" hidden>
+          <h4 data-i18n="import.mappingTitle">طابِق أعمدة الملف مع الحقول</h4>
+          <div class="mapping-grid" id="mapping-grid"></div>
+          <div class="sheet-actions">
+            <button type="button" class="btn btn-ghost" id="import-back" data-i18n="btn.back">رجوع</button>
+            <button type="button" class="btn btn-primary" id="import-preview" data-i18n="import.preview">معاينة</button>
+          </div>
+        </div>
+
+        <div class="import-pane" id="import-pane-3" hidden>
+          <div class="preview-summary" id="preview-summary"></div>
+          <div class="preview-scroll">
+            <table class="table preview" id="preview-table">
+              <thead><tr id="preview-head"></tr></thead>
+              <tbody id="preview-body"></tbody>
+            </table>
+          </div>
+          <label class="check">
+            <input type="checkbox" id="skip-dupes" checked />
+            <span data-i18n="import.skipDupes">تخطّي الأرقام المكرّرة</span>
+          </label>
+          <div class="sheet-actions">
+            <button type="button" class="btn btn-ghost" id="import-back2" data-i18n="btn.back">رجوع</button>
+            <button type="button" class="btn btn-primary" id="import-run" data-i18n="import.run">استيراد</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Categories sheet ---------- -->
+  <section class="sheet" id="cat-sheet" hidden aria-modal="true" role="dialog">
+    <div class="sheet-scrim" data-close-cats></div>
+    <div class="sheet-panel">
+      <header class="sheet-head">
+        <h2 data-i18n="cat.title">إدارة الفئات</h2>
+        <button class="icon-btn" type="button" data-close-cats aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet-body">
+        <ul class="cat-list" id="cat-list"></ul>
+        <form class="cat-add" id="cat-add-form">
+          <input id="cat-new" type="text" data-i18n-placeholder="cat.newPlaceholder" placeholder="اسم فئة جديدة" required />
+          <button type="submit" class="btn btn-primary" data-i18n="cat.add">إضافة</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Export sheet ---------- -->
+  <section class="sheet" id="export-sheet" hidden aria-modal="true" role="dialog">
+    <div class="sheet-scrim" data-close-export></div>
+    <div class="sheet-panel small">
+      <header class="sheet-head">
+        <h2 data-i18n="export.title">تصدير جهات الاتصال</h2>
+        <button class="icon-btn" type="button" data-close-export aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet-body">
+        <p class="muted" id="export-count" style="margin-bottom:16px"></p>
+        <div class="admin-grid">
+          <button class="admin-card" id="export-csv" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm0 2.5L17.5 8H14V4.5Z"/></svg>
+            <strong data-i18n="export.csv">تصدير CSV</strong>
+            <span class="muted" data-i18n="export.csvDesc">يعمل مع Excel و Google Sheets</span>
+          </button>
+          <button class="admin-card" id="export-xlsx" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm0 2.5L17.5 8H14V4.5Z"/></svg>
+            <strong data-i18n="export.xlsx">تصدير Excel</strong>
+            <span class="muted" data-i18n="export.xlsxDesc">ملف .xlsx جاهز</span>
+          </button>
+        </div>
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-ghost" data-close-export data-i18n="btn.close">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Confirm dialog ---------- -->
+  <section class="sheet" id="confirm-sheet" hidden aria-modal="true" role="dialog">
+    <div class="sheet-scrim" data-close-confirm></div>
+    <div class="sheet-panel small">
+      <header class="sheet-head">
+        <h2 id="confirm-title" data-i18n="confirm.deleteTitle">حذف جهة الاتصال؟</h2>
+      </header>
+      <div class="sheet-body">
+        <p id="confirm-text" class="muted" data-i18n="confirm.deleteText">لا يمكن التراجع عن هذا الإجراء.</p>
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-ghost" data-close-confirm data-i18n="btn.cancel">إلغاء</button>
+          <button type="button" class="btn btn-danger" id="confirm-ok" data-i18n="btn.delete">حذف</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Toasts ---------- -->
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+</div>
+
+<!-- ==================================================================
+     SCRIPTS — plain scripts (no build step, no bundler).
+     Order matters. Each file attaches to the global `W` namespace.
+     ================================================================== -->
+<script src="config.js"></script>
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/normalize.js"></script>
+<script src="assets/js/seed-data.js"></script>
+<script src="assets/js/db.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/io.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

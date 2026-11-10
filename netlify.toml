@@ -1,0 +1,28 @@
+# Netlify configuration for Wessal Contacts.
+# The site has NO build step — it is plain HTML/CSS/JS.
+#
+# Deploy: drag & drop the "public" folder onto https://app.netlify.com/drop
+# ...or connect the Git repo and keep these settings.
+
+[build]
+  publish = "public"
+  command = ""
+
+# Single-page app: send every path to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+
+# Cache the static assets, but always serve the HTML fresh
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

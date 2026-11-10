@@ -1,0 +1,26 @@
+# ---------------------------------------------------------------------------
+# Wessal Contacts — files that must never be published
+# ---------------------------------------------------------------------------
+
+# Creates the two login accounts and contains both passwords as plain text.
+# Keep it in your private copy of the project only.
+supabase/02_create_accounts.sql
+
+# Local secrets: fill these in on your own machine, never commit them.
+# (public/config.js ships with empty values on purpose.)
+config.local.js
+.env
+.env.*
+*.local
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.tmp
+*.log
+
+# Local preview artefacts
+*.zip

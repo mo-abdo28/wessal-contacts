@@ -1116,3 +1116,20 @@ html[dir="rtl"] .select-wrap select { background-position: left 8px center; }
 .act-dot.act-request { background: #d97706; }
 .act-log-text { flex: 1; min-width: 0; }
 .act-log-when { flex: 0 0 auto; font-size: .74rem; }
+/* Notice shown on the login screen when the site has no database yet */
+.auth-notice {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid #f0c36d;
+  border-radius: var(--radius-sm);
+  background: #fdf6e3;
+  color: #7a4b00;
+  font-size: .86rem;
+  line-height: 1.6;
+}
+[data-theme="dark"] .auth-notice {
+  border-color: #6b4a12;
+  background: #2e2210;
+  color: #fbbf24;
+}
+.auth-notice[hidden] { display: none !important; }

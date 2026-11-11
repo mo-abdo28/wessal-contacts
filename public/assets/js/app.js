@@ -26,7 +26,16 @@ W.app = {
     var self = this;
 
     if (!W.isOnline) {
-      // Preview mode: no server configured, so skip authentication and
+      // No database configured.
+      if (W.previewMode() === "locked") {
+        // Published site with no database: show the login screen and
+        // nothing else. No directory, no admin tools, no sample data.
+        self.showLogin();
+        self.lockLogin();
+        return;
+      }
+
+      // Local preview: no server configured, so skip authentication and
       // open the app directly with the sample data.
       W.store.previewRole = localStorage.getItem("wessal-preview-role") || "admin";
       W.store.identify(null).then(function () {
@@ -90,6 +99,28 @@ W.app = {
     }, 60);
   },
 
+  /**
+   * The site is published but no database is connected yet: say so
+   * plainly and refuse to pretend that a sign-in can succeed. Nobody
+   * can reach the directory or the admin tools without a real login.
+   */
+  lockLogin: function () {
+    var notice = document.getElementById("login-notice");
+    var btn = document.getElementById("login-submit");
+    var user = document.getElementById("login-username");
+    var pass = document.getElementById("login-password");
+    var help = document.querySelector(".auth-foot");
+
+    if (notice) {
+      notice.hidden = false;
+      notice.textContent = W.t("auth.noDb");
+    }
+    if (btn) btn.disabled = true;
+    if (user) user.disabled = true;
+    if (pass) pass.disabled = true;
+    if (help) help.textContent = W.t("auth.noDbHelp");
+  },
+
   showApp: function () {
     document.getElementById("login-screen").hidden = true;
     document.getElementById("app").hidden = false;
@@ -134,6 +165,13 @@ W.app = {
       e.preventDefault();
       var u = document.getElementById("login-username").value.trim();
       var p = document.getElementById("login-password").value;
+
+      // No database connected: the login can never work, so say so.
+      if (!W.isOnline && W.previewMode() === "locked") {
+        err.hidden = false;
+        err.textContent = W.t("auth.noDb");
+        return;
+      }
 
       if (!u || !p) {
         err.hidden = false;

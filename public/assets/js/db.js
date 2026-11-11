@@ -22,6 +22,33 @@ W.CFG.SUPABASE_ANON_KEY = (W.CFG.SUPABASE_ANON_KEY || "").trim();
 /* True when the app is talking to a real Supabase project. */
 W.isOnline = !!(W.CFG.SUPABASE_URL && W.CFG.SUPABASE_ANON_KEY);
 
+/**
+ * How the app behaves when there is no database connected.
+ *
+ *   "auto"   (default) — open for preview on your own computer
+ *                      (localhost or a file you double-clicked),
+ *                      locked everywhere else.
+ *   "open"   — always show the offline preview with the sample data.
+ *   "locked" — always show the login screen only. Nobody can see the
+ *              directory or the admin tools without a real login.
+ *
+ * "auto" is what keeps a published site safe: on the public URL the
+ * visitor gets the login screen and nothing else.
+ */
+W.previewMode = function () {
+  var cfg = (W.CFG.PREVIEW_MODE || "auto").toLowerCase();
+  if (cfg === "open" || cfg === "locked") return cfg;
+
+  var host = String(window.location.hostname || "").toLowerCase();
+  var isLocal = !host ||
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "[::1]" ||
+    host === "0.0.0.0" ||
+    window.location.protocol === "file:";
+  return isLocal ? "open" : "locked";
+};
+
 W.CDN = {
   supabase: "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js",
   xlsx: "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"

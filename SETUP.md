@@ -54,6 +54,24 @@ This created three tables — `contacts`, `categories`, `profiles` — and switc
 
 ---
 
+## Step 2b — Approvals and the activity log (الموافقات وسجل النشاط)
+
+1. **SQL Editor** → **New query**
+2. Open `supabase/04_activity.sql`, copy **all** of it, paste it, click **Run**
+3. You should see two counts at the bottom (`change_requests` and `activity_log`). Both `0` is correct.
+
+This file is **additive** — it never drops your contacts, so it is safe to run now and safe to run again later.
+
+It adds:
+
+- **`change_requests`** — when a member edits a contact, the change is *not* applied straight away. It waits here until you approve it.
+- **`activity_log`** — a permanent record of every change (add, edit, delete, approve, reject), written by the database itself so it cannot be skipped.
+- It also tightens the rules on `contacts`: from now on **only an admin can change a contact directly**. Members edit by sending you a request.
+
+Without this file the app still works — members simply edit directly, as before.
+
+---
+
 ## Step 3 — Create the two accounts (الحسابات)
 
 ### Option A — The easy way (recommended for non-developers)
@@ -254,6 +272,7 @@ wessal-contacts/
 │  ├─ 01_schema.sql            ← run this first
 │  ├─ 02_create_accounts.sql   ← the two accounts (private copy only)
 │  ├─ 03_seed_contacts.sql     ← the 17 contacts (optional)
+│  ├─ 04_activity.sql          ← approvals + activity log (run this too)
 │  └─ wessal_contacts.csv      ← ready-made import file
 ├─ netlify.toml                Netlify settings
 ├─ vercel.json                 Vercel settings

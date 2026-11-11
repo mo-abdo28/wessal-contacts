@@ -176,3 +176,50 @@ W.formatPhoneDisplay = function (digits) {
   }
   return "+" + d;
 };
+
+/* =====================================================================
+ * Change diffing — used by the approval workflow and the activity log.
+ * ===================================================================== */
+
+/** The editable fields of a contact, in the order they are shown. */
+W.CONTACT_FIELDS = [
+  { key: "name",            label: "col.name" },
+  { key: "organization",    label: "col.org" },
+  { key: "phone",           label: "col.phone" },
+  { key: "phone_secondary", label: "col.phone2" },
+  { key: "has_whatsapp",    label: "col.wa" },
+  { key: "category",        label: "col.category" },
+  { key: "notes",           label: "col.notes" }
+];
+
+/**
+ * Field-by-field difference between two contact records.
+ * Returns { fieldKey: { from: ..., to: ... } } for the fields that
+ * actually changed — used to show the admin exactly what a member
+ * wants to change before approving it.
+ */
+W.contactDiff = function (before, after) {
+  var diff = {};
+  var a = before || {};
+  var b = after || {};
+
+  W.CONTACT_FIELDS.forEach(function (f) {
+    var from = a[f.key];
+    var to = b[f.key];
+    if (from === undefined || from === null) from = "";
+    if (to === undefined || to === null) to = "";
+    if (String(from) !== String(to)) {
+      diff[f.key] = { from: from, to: to };
+    }
+  });
+
+  return diff;
+};
+
+/** Human-readable value of a field, ready to show in the diff list. */
+W.diffValue = function (key, value) {
+  if (value === undefined || value === null || value === "") return "—";
+  if (key === "has_whatsapp") return value ? W.t("form.yes") : W.t("form.no");
+  if (key === "phone" || key === "phone_secondary") return W.formatPhoneDisplay(value);
+  return String(value);
+};

@@ -41,6 +41,26 @@ W.app = {
       this.showLogin();
       this.tryRestore();
     }
+
+    // Keep the pending badge and the approval list fresh, even when the
+    // admin leaves the page open on their phone.
+    var self = this;
+    setInterval(function () {
+      if (!W.store.user) return;
+      W.store.loadReview().then(function () {
+        self.updateBadge();
+        var sheet = document.getElementById("activity-sheet");
+        if (sheet && !sheet.hidden) W.ui.renderActivity();
+      });
+    }, 30000);
+  },
+
+  /** Live updates: the list refreshes when a teammate changes something. */
+  startLive: function () {
+    var self = this;
+    if (!W.isOnline || this._liveStarted) return;
+    this._liveStarted = true;
+    W.store.startRealtime(function () { self.refresh(); });
   },
 
   detectLang: function () {
@@ -83,6 +103,7 @@ W.app = {
         if (user) {
           return W.store.identify(user).then(function () {
             self.showApp();
+            self.startLive();
             return self.refresh();
           });
         }
@@ -135,6 +156,7 @@ W.app = {
           return W.store.identify(res.data.user).then(function () {
             document.getElementById("login-password").value = "";
             self.showApp();
+            self.startLive();
             return self.refresh();
           });
         })
@@ -225,6 +247,8 @@ W.app = {
       W.ui.render();
       var catSheet = document.getElementById("cat-sheet");
       if (catSheet && !catSheet.hidden) W.ui.renderCategories();
+      var actSheet = document.getElementById("activity-sheet");
+      if (actSheet && !actSheet.hidden) W.ui.renderActivity();
     }
   },
 
@@ -250,6 +274,8 @@ W.app = {
 
     var previewSelect = document.getElementById("preview-role");
     if (previewSelect) previewSelect.value = W.store.role;
+
+    this.updateBadge();
   },
 
   /* ------------------------------------------------------------------
@@ -490,19 +516,33 @@ W.app = {
     }
 
     var editingId = W.ui.state.editingId;
-    var p = editingId
-      ? W.store.editContact(editingId, values)
-      : W.store.addContact(values);
+
+    // A member's edit is not applied straight away: it is sent to the
+    // admin as a change request and only lands once it is approved.
+    var needsApproval = !!editingId && !W.store.isAdmin() && W.store.approvalsReady;
+
+    var p = needsApproval
+      ? W.store.requestEdit(editingId, values)
+      : (editingId
+        ? W.store.editContact(editingId, values)
+        : W.store.addContact(values));
 
     p.then(function () {
       return self.refresh();
     })
      .then(function () {
        self.closeSheet("contact-sheet");
-       self.toast(W.t(editingId ? "toast.updated" : "toast.added"), "ok");
+       self.updateBadge();
+       self.toast(W.t(needsApproval
+         ? "toast.sentForApproval"
+         : (editingId ? "toast.updated" : "toast.added")), "ok");
      })
      .catch(function (err) {
        console.error(err);
+       if (err && err.message === "nochange") {
+         self.toast(W.t("act.noChanges"), "err");
+         return;
+       }
        self.toast(W.t("toast.error"), "err");
      });
   },
@@ -596,6 +636,21 @@ W.app = {
 
     document.querySelectorAll("[data-close-confirm]").forEach(function (b) {
       b.addEventListener("click", function () { self.closeSheet("confirm-sheet"); });
+    });
+
+    // Approvals + activity log
+    var act = document.getElementById("admin-activity");
+    if (act) {
+      act.addEventListener("click", function () {
+        self.closeSheet("admin-panel");
+        self.openActivity("pending");
+      });
+    }
+    document.querySelectorAll("[data-close-activity]").forEach(function (b) {
+      b.addEventListener("click", function () { self.closeSheet("activity-sheet"); });
+    });
+    document.querySelectorAll("[data-act-tab]").forEach(function (b) {
+      b.addEventListener("click", function () { self.switchActivityTab(b.dataset.actTab); });
     });
   },
 
@@ -941,6 +996,99 @@ W.app = {
   },
 
   /* ------------------------------------------------------------------
+   * Approvals + activity log
+   * ---------------------------------------------------------------- */
+  activityTab: "pending",
+
+  /** Open the admin panel that shows pending changes and the log. */
+  openActivity: function (tab) {
+    var self = this;
+    var sheet = document.getElementById("activity-sheet");
+    if (!sheet) return;
+
+    this.activityTab = tab || "pending";
+    sheet.hidden = false;
+    document.body.style.overflow = "hidden";
+    W.ui.renderActivity();
+
+    W.store.loadReview().then(function () {
+      self.updateBadge();
+      W.ui.renderActivity();
+    });
+  },
+
+  switchActivityTab: function (tab) {
+    this.activityTab = tab;
+    W.ui.renderActivity();
+  },
+
+  /** The admin approves a proposed change: it is applied immediately. */
+  approveRequest: function (id) {
+    var self = this;
+    W.store.approveChange(id)
+      .then(function () {
+        self.updateBadge();
+        W.ui.renderActivity();
+        W.ui.render();
+        self.toast(W.t("toast.approved"), "ok");
+      })
+      .catch(function (err) {
+        console.error(err);
+        self.toast(W.t("toast.error"), "err");
+      });
+  },
+
+  /** The admin rejects a proposed change: nothing is applied. */
+  rejectRequest: function (id, name) {
+    var self = this;
+    var sheet = document.getElementById("confirm-sheet");
+    var title = document.getElementById("confirm-title");
+    var text = document.getElementById("confirm-text");
+    var ok = document.getElementById("confirm-ok");
+    if (!sheet) return;
+
+    if (title) title.textContent = W.t("act.rejectTitle");
+    if (text) text.textContent = W.t("act.rejectText", { name: name || "" });
+    if (ok) ok.textContent = W.t("act.reject");
+    sheet.hidden = false;
+
+    if (ok) {
+      ok.onclick = function () {
+        W.store.rejectChange(id)
+          .then(function () {
+            self.closeSheet("confirm-sheet");
+            self.updateBadge();
+            W.ui.renderActivity();
+            W.ui.render();
+            self.toast(W.t("toast.rejected"), "ok");
+          })
+          .catch(function (err) {
+            console.error(err);
+            self.closeSheet("confirm-sheet");
+            self.toast(W.t("toast.error"), "err");
+          });
+      };
+    }
+  },
+
+  /** Show how many changes are waiting for the admin, on the shield. */
+  updateBadge: function () {
+    var badge = document.getElementById("pending-badge");
+    var btn = document.getElementById("admin-open");
+    var n = W.store.isAdmin() ? W.store.pendingCount() : 0;
+
+    if (badge) {
+      badge.textContent = n;
+      badge.hidden = !n;
+    }
+    if (btn) {
+      btn.setAttribute("aria-label", n
+        ? W.t("header.pending") + " (" + n + ")"
+        : W.t("header.adminTools"));
+    }
+  },
+
+  /* ------------------------------------------------------------------
    * Helpers
    * ---------------------------------------------------------------- */
   closeSheet: function (id) {
@@ -956,6 +1104,7 @@ W.app = {
     var self = this;
     return W.store.load().then(function () {
       self.applyRoleUI();
+      self.updateBadge();
       W.ui.render();
       return self;
     });

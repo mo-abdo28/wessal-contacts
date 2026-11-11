@@ -39,6 +39,13 @@ Supabase, the two logins, the import and the deployment, in plain language.
   contact holds it.
 - **Import / export (admin)** — CSV and Excel, with column mapping and a preview
   before saving. Duplicate numbers are skipped, shared numbers are reported.
+- **Approvals (admin)** — a member's *edit* does not apply straight away. It is sent
+  to the admin as a change request showing exactly which fields change, and lands
+  only after it is approved. Adding a contact stays instant.
+- **Instant admin notification** — a red badge on the admin shield counts the
+  changes waiting for a decision, refreshed in real time.
+- **Activity log (admin)** — every change (add, edit, delete, approve, reject) with
+  who did it and when, written by a database trigger so it cannot be bypassed.
 - **Live for the whole team** — Supabase Realtime, so changes appear on every phone.
 - **Counters** — total, with WhatsApp, without WhatsApp, and per category.
 - **Mobile first** — cards on phones, a table on desktop, large tap targets.
@@ -49,7 +56,7 @@ Supabase, the two logins, the import and the deployment, in plain language.
 
 | Username | Password | Role | Permissions |
 |----------|----------|------|-------------|
-| `wessal` | member password (not published here) | Member | View, add, edit |
+| `wessal` | member password (not published here) | Member | View, add, and request edits (the admin approves them) |
 | `Abdo` | admin password (not published here) | Admin | All of the above + delete, import, export, categories |
 
 > This repository is public, so the two passwords are deliberately **not** printed here.
@@ -89,6 +96,7 @@ wessal-contacts/
 │  ├─ 01_schema.sql         tables + RLS + realtime
 │  ├─ 02_create_accounts.sql the two logins (kept out of git — contains passwords)
 │  ├─ 03_seed_contacts.sql   the 17 contacts
+│  ├─ 04_activity.sql        approvals + activity log (run this too)
 │  └─ wessal_contacts.csv    ready-made import file
 ├─ netlify.toml / vercel.json
 ├─ serve.ps1                 local preview server

@@ -24,5 +24,14 @@ window.WESSAL_CONFIG = {
 
   // Domain used to turn a username into a login email
   // (username "Abdo" -> "abdo@wessal.app")
-  AUTH_EMAIL_DOMAIN: "wessal.app"
+  AUTH_EMAIL_DOMAIN: "wessal.app",
+
+  // What to do when the two values above are still EMPTY:
+  //   "auto"   - open for preview on your own computer (localhost or a
+  //              file you double-clicked), LOCKED everywhere else.
+  //   "open"   - always show the offline preview with sample data.
+  //   "locked" - always show the login screen only.
+  // "auto" is what keeps a published site safe: visitors on the public
+  // URL see the sign-in screen and nothing else.
+  PREVIEW_MODE: "auto"
 };

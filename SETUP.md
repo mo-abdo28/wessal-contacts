@@ -291,3 +291,25 @@ powershell -ExecutionPolicy Bypass -File serve.ps1 -Port 8080
 
 Then visit `http://localhost:8080`. The app runs with the sample data stored in
 that browser only. Add `?empty=1` to the address to start with an empty list.
+
+### 🔒 The published site is locked until you connect a database
+
+This is the important part. While `public/config.js` has **empty** `SUPABASE_URL`
+and `SUPABASE_ANON_KEY`, anyone who opens the published link sees **only the
+sign-in screen** — no contacts, no admin tools, no way in. The preview with the
+sample data works on your own computer only (`localhost`, or opening
+`public/index.html` directly).
+
+That is deliberate: a published link with no login is an open door.
+
+You can control it with `PREVIEW_MODE` in `public/config.js`:
+
+| Value | Behaviour |
+|-------|-----------|
+| `"auto"` | **Default.** Preview on your computer, locked on the public link. |
+| `"open"` | Always the offline preview. Only for a private demo link. |
+| `"locked"` | Always the sign-in screen. |
+
+As soon as you paste your real Supabase URL and anon key into `config.js` and
+push, the real login appears automatically and the two accounts work exactly as
+described above.

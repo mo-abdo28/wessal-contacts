@@ -997,3 +997,122 @@ html[dir="rtl"] .select-wrap select { background-position: left 8px center; }
 }
 
 
+
+/* =====================================================================
+   Approvals + activity log
+   ===================================================================== */
+
+/* The count bubble on the admin shield */
+.icon-btn { position: relative; }
+.btn-badge {
+  position: absolute;
+  top: -3px;
+  inset-inline-end: -3px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: .66rem;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--bg-elevated);
+}
+
+/* "Waiting for approval" marker */
+.badge-pending { background: #fef3c7; color: #b45309; }
+[data-theme="dark"] .badge-pending { background: #3a2a08; color: #fbbf24; }
+
+/* Tabs: pending / log */
+.act-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.act-tab {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.act-tab.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-contrast);
+}
+
+/* One pending request */
+.act-item {
+  padding: 13px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.act-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 8px;
+}
+.act-item-head strong { font-size: .95rem; }
+.act-item-head .muted { font-size: .78rem; }
+
+/* The field-by-field difference */
+.act-diff { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.act-diff li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: .85rem;
+}
+.act-diff-field {
+  min-width: 92px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.act-from { color: var(--danger); text-decoration: line-through; }
+.act-to { color: var(--brand); font-weight: 700; text-decoration: none; }
+.act-arrow { color: var(--text-muted); }
+[dir="rtl"] .act-arrow { display: inline-block; transform: scaleX(-1); }
+
+.act-actions { display: flex; gap: 8px; margin-top: 12px; }
+.act-actions .btn { flex: 1; }
+.act-empty { text-align: center; padding: 26px 10px; }
+
+/* The audit trail */
+.act-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.act-log-row {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: .86rem;
+}
+.act-log-row:last-child { border-bottom: 0; }
+.act-dot {
+  flex: 0 0 auto;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+.act-dot.act-create { background: #16a34a; }
+.act-dot.act-update { background: var(--brand); }
+.act-dot.act-delete { background: var(--danger); }
+.act-dot.act-approve { background: #16a34a; }
+.act-dot.act-reject { background: var(--danger); }
+.act-dot.act-request { background: #d97706; }
+.act-log-text { flex: 1; min-width: 0; }
+.act-log-when { flex: 0 0 auto; font-size: .74rem; }

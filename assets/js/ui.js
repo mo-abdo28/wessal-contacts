@@ -207,6 +207,9 @@ W.ui = {
     if (c.phone_secondary) {
       badges.appendChild(this.badge("badge-extra", W.t("card.secondary"), "extra"));
     }
+    if (W.store.pendingFor(c.id)) {
+      badges.appendChild(this.badge("badge-pending", W.t("act.pendingBadge"), "pending"));
+    }
     el.appendChild(badges);
 
     // Phone rows with one-tap actions
@@ -336,6 +339,7 @@ W.ui = {
     var parts = [];
     if (who) parts.push(W.t("card.addedBy") + " " + who);
     if (when) parts.push(W.t("card.on") + " " + when);
+    if (c.updated_by_name) parts.push(W.t("card.updatedBy") + " " + c.updated_by_name);
     return parts.join(" · ");
   },
 
@@ -377,7 +381,16 @@ W.ui = {
 
     tr.appendChild(this.td(c.category || "—", ""));
     tr.appendChild(this.td(c.notes || "—", "td-notes"));
-    tr.appendChild(this.td(this.addedLabel(c), "td-added"));
+
+    // "Added by" + a marker when a change is waiting for approval
+    var tdAdded = document.createElement("td");
+    tdAdded.className = "td-added";
+    tdAdded.textContent = this.addedLabel(c);
+    if (W.store.pendingFor(c.id)) {
+      tdAdded.appendChild(document.createElement("br"));
+      tdAdded.appendChild(this.badge("badge-pending", W.t("act.pendingBadge"), "pending"));
+    }
+    tr.appendChild(tdAdded);
 
     // Actions
     var tdAct = document.createElement("td");
@@ -489,6 +502,185 @@ W.ui = {
       }
 
       host.appendChild(li);
+    });
+  },
+
+  /* ------------------------------------------------------------------
+   * Admin: pending approvals + activity log
+   * ---------------------------------------------------------------- */
+  renderActivity: function () {
+    var tabs = document.querySelectorAll("[data-act-tab]");
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle("active", tabs[i].dataset.actTab === W.app.activityTab);
+    }
+
+    var pWrap = document.getElementById("act-pending");
+    var lWrap = document.getElementById("act-log");
+    if (pWrap) pWrap.hidden = W.app.activityTab !== "pending";
+    if (lWrap) lWrap.hidden = W.app.activityTab !== "log";
+
+    this.renderPending();
+    this.renderLog();
+  },
+
+  /** The change requests that are still waiting for the admin. */
+  renderPending: function () {
+    var host = document.getElementById("act-pending-list");
+    if (!host) return;
+    host.innerHTML = "";
+
+    var rows = W.store.pending.filter(function (r) { return r.status === "pending"; });
+
+    if (!rows.length) {
+      var empty = document.createElement("p");
+      empty.className = "muted act-empty";
+      empty.textContent = W.t("act.pendingEmpty");
+      host.appendChild(empty);
+      return;
+    }
+
+    var self = this;
+    rows.forEach(function (r) { host.appendChild(self.requestCard(r)); });
+  },
+
+  /** One pending request: what changed, and the approve / reject buttons. */
+  requestCard: function (r) {
+    var el = document.createElement("article");
+    el.className = "act-item";
+
+    var head = document.createElement("div");
+    head.className = "act-item-head";
+    var title = document.createElement("strong");
+    title.textContent = r.contact_name || "—";
+    head.appendChild(title);
+    var who = document.createElement("span");
+    who.className = "muted";
+    who.textContent = W.t("act.requestedBy") + " " + (r.requested_by_username || "—") +
+      " · " + this.dateLabel(r.created_at);
+    head.appendChild(who);
+    el.appendChild(head);
+
+    // The difference, field by field
+    var diff = r.diff || {};
+    var keys = Object.keys(diff);
+
+    if (!keys.length) {
+      var none = document.createElement("p");
+      none.className = "muted";
+      none.textContent = W.t("act.noChanges");
+      el.appendChild(none);
+    } else {
+      var list = document.createElement("ul");
+      list.className = "act-diff";
+      var self = this;
+      keys.forEach(function (k) {
+        var f = null;
+        for (var i = 0; i < W.CONTACT_FIELDS.length; i++) {
+          if (W.CONTACT_FIELDS[i].key === k) f = W.CONTACT_FIELDS[i];
+        }
+        var li = document.createElement("li");
+
+        var label = document.createElement("span");
+        label.className = "act-diff-field";
+        label.textContent = f ? W.t(f.label) : k;
+        li.appendChild(label);
+
+        var from = document.createElement("del");
+        from.className = "act-from";
+        from.textContent = W.diffValue(k, diff[k].from);
+        li.appendChild(from);
+
+        var arrow = document.createElement("span");
+        arrow.className = "act-arrow";
+        arrow.textContent = "→";
+        li.appendChild(arrow);
+
+        var to = document.createElement("ins");
+        to.className = "act-to";
+        to.textContent = W.diffValue(k, diff[k].to);
+        li.appendChild(to);
+
+        list.appendChild(li);
+      });
+      el.appendChild(list);
+    }
+
+    if (W.store.isAdmin()) {
+      var actions = document.createElement("div");
+      actions.className = "act-actions";
+
+      var ok = document.createElement("button");
+      ok.type = "button";
+      ok.className = "btn btn-primary";
+      ok.textContent = W.t("act.approve");
+      ok.addEventListener("click", function () { W.app.approveRequest(r.id); });
+      actions.appendChild(ok);
+
+      var no = document.createElement("button");
+      no.type = "button";
+      no.className = "btn btn-ghost";
+      no.textContent = W.t("act.reject");
+      no.addEventListener("click", function () { W.app.rejectRequest(r.id, r.contact_name); });
+      actions.appendChild(no);
+
+      el.appendChild(actions);
+    }
+
+    return el;
+  },
+
+  /** The full audit trail. */
+  renderLog: function () {
+    var host = document.getElementById("act-log-list");
+    if (!host) return;
+    host.innerHTML = "";
+
+    if (!W.store.activity.length) {
+      var empty = document.createElement("p");
+      empty.className = "muted act-empty";
+      empty.textContent = W.t("act.logEmpty");
+      host.appendChild(empty);
+      return;
+    }
+
+    var ul = document.createElement("ul");
+    ul.className = "act-log";
+    var self = this;
+
+    W.store.activity.forEach(function (a) {
+      var li = document.createElement("li");
+      li.className = "act-log-row";
+
+      var dot = document.createElement("span");
+      dot.className = "act-dot act-" + (a.action || "");
+      li.appendChild(dot);
+
+      var txt = document.createElement("span");
+      txt.className = "act-log-text";
+      txt.textContent = (a.contact_name ? a.contact_name + " — " : "") +
+        W.t("act.action." + (a.action || "update")) +
+        (a.actor_username ? " (" + W.t("act.by") + " " + a.actor_username + ")" : "");
+      li.appendChild(txt);
+
+      var when = document.createElement("span");
+      when.className = "muted act-log-when";
+      when.textContent = self.dateLabel(a.created_at);
+      li.appendChild(when);
+
+      ul.appendChild(li);
+    });
+
+    host.appendChild(ul);
+  },
+
+  /** Date + time, in the active language. */
+  dateLabel: function (iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleString(W.lang === "ar" ? "ar-EG" : "en-GB", {
+      year: "numeric", month: "short", day: "numeric",
+      hour: "2-digit", minute: "2-digit"
     });
   }
 };

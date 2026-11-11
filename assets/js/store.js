@@ -11,6 +11,9 @@ window.W = window.W || {};
 W.store = {
   contacts: [],
   categories: [],
+  pending: [],        // change requests waiting for approval
+  activity: [],       // audit trail (admins only)
+  approvalsReady: true, // false when 04_activity.sql has not been run yet
   user: null,        // { id, email, username }
   role: "member",    // "admin" | "member"
   previewRole: "admin", // used only in local preview mode
@@ -27,6 +30,37 @@ W.store = {
         self.categories = res[1] || [];
         self._ensureCategories();
         return self;
+      })
+      .then(function () { return self.loadReview(); })
+      .catch(function (err) {
+        // The approval tables may not exist yet (04_activity.sql not run).
+        if (!self.approvalsReady) throw err;
+        self.approvalsReady = false;
+        return self;
+      });
+  },
+
+  /**
+   * Load the change requests (and, for admins, the activity log).
+   * Never throws: if the tables are missing the feature simply turns
+   * itself off and the app keeps working as before.
+   */
+  loadReview: function () {
+    var self = this;
+    return W.db.listPending()
+      .then(function (rows) {
+        self.pending = rows || [];
+        if (!self.isAdmin()) return null;
+        return W.db.listActivity(200).then(function (rows) {
+          self.activity = rows || [];
+          return null;
+        }).catch(function () { self.activity = []; return null; });
+      })
+      .catch(function () {
+        self.approvalsReady = false;
+        self.pending = [];
+        self.activity = [];
+        return null;
       });
   },
 
@@ -119,7 +153,68 @@ W.store = {
 
   editContact: function (id, values) {
     var row = this.buildRow(values);
+    row.updated_by_name = this.user ? (this.user.username || "") : "";
     return W.db.updateContact(id, row);
+  },
+
+  /* ---------------- approval workflow ---------------- */
+
+  /**
+   * A member's edit: instead of writing to the contact straight away,
+   * send the proposed values to the admin as a change request.
+   */
+  requestEdit: function (id, values) {
+    var self = this;
+    var contact = this.contacts.find(function (c) { return String(c.id) === String(id); });
+    if (!contact) return Promise.reject(new Error("missing"));
+
+    var row = this.buildRow(values);
+    var diff = W.contactDiff(contact, row);
+
+    if (!Object.keys(diff).length) {
+      return Promise.reject(new Error("nochange"));
+    }
+
+    return W.db.submitChange({
+      contact_id: contact.id,
+      contact_name: this.label(contact),
+      payload: row,
+      diff: diff,
+      requested_by: this.user ? this.user.id : null,
+      requested_by_username: this.user ? (this.user.username || "") : ""
+    }).then(function (rec) {
+      self.pending.unshift(rec);
+      return rec;
+    });
+  },
+
+  /** The admin approves a request: the proposed values are applied. */
+  approveChange: function (id) {
+    var self = this;
+    return W.db.reviewChange(id, "approved", "").then(function () {
+      return self.load();
+    });
+  },
+
+  /** The admin rejects a request: nothing is applied. */
+  rejectChange: function (id, note) {
+    var self = this;
+    return W.db.reviewChange(id, "rejected", note || "").then(function () {
+      return self.load();
+    });
+  },
+
+  /** The pending request that touches this contact, if any. */
+  pendingFor: function (contactId) {
+    if (!contactId) return null;
+    return this.pending.find(function (r) {
+      return String(r.contact_id) === String(contactId) && r.status === "pending";
+    }) || null;
+  },
+
+  /** How many changes are waiting for the admin. */
+  pendingCount: function () {
+    return this.pending.filter(function (r) { return r.status === "pending"; }).length;
   },
 
   removeContact: function (id) {

@@ -105,6 +105,7 @@
         <button class="icon-btn" id="admin-open" type="button" hidden
                 data-i18n-aria="header.adminTools" aria-label="Admin tools">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2 3 6v6c0 5.2 3.8 9.9 9 10.9 5.2-1 9-5.7 9-10.9V6l-9-4Zm0 2.2 7 3.1V12c0 4.2-2.9 8.1-7 9.1-4.1-1-7-4.9-7-9.1V7.3l7-3.1Zm-1 4.3a1 1 0 0 0-1 1v3.5H7a1 1 0 1 0 0 2h3v3.5a1 1 0 1 0 2 0V13h3a1 1 0 1 0 0-2h-3V9.5a1 1 0 0 0-1-1Z"/></svg>
+          <span class="btn-badge" id="pending-badge" hidden>0</span>
         </button>
 
         <button class="icon-btn" id="logout" type="button" data-i18n-aria="header.logout" aria-label="Log out">
@@ -242,7 +243,38 @@
             <strong data-i18n="admin.cats">إدارة الفئات</strong>
             <span class="muted" data-i18n="admin.catsDesc">إضافة أو تعديل الفئات</span>
           </button>
+          <button class="admin-card" id="admin-activity" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
+            <strong data-i18n="admin.activity">التعديلات والسجل</strong>
+            <span class="muted" data-i18n="admin.activityDesc">اعتماد تعديلات الأعضاء ومتابعة النشاط</span>
+          </button>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Approvals + activity log ---------- -->
+  <section class="sheet" id="activity-sheet" hidden aria-modal="true" role="dialog">
+    <div class="sheet-scrim" data-close-activity></div>
+    <div class="sheet-panel">
+      <header class="sheet-head">
+        <h2 data-i18n="act.title">التعديلات وسجل النشاط</h2>
+        <button class="icon-btn" type="button" data-close-activity aria-label="Close">&times;</button>
+      </header>
+
+      <div class="act-tabs" role="tablist">
+        <button type="button" class="act-tab active" data-act-tab="pending" role="tab"
+                data-i18n="act.tabPending">بانتظار الموافقة</button>
+        <button type="button" class="act-tab" data-act-tab="log" role="tab"
+                data-i18n="act.tabLog">سجل النشاط</button>
+      </div>
+
+      <div class="sheet-body" id="act-pending">
+        <div id="act-pending-list"></div>
+      </div>
+
+      <div class="sheet-body" id="act-log" hidden>
+        <div id="act-log-list"></div>
       </div>
     </div>
   </section>

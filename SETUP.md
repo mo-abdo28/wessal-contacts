@@ -6,6 +6,24 @@
 
 ---
 
+## ✅ Current status (حالة المشروع الآن)
+
+This project is **already set up and live**. The guide below is kept so you can
+redo it (or move it to another Supabase account) from scratch.
+
+| What | Where |
+|------|-------|
+| Live site | **https://mo-abdo28.github.io/wessal-contacts/** |
+| Supabase project | `https://gmpmbvpojxmttfhkuqgc.supabase.co` (plan: Free, $0) |
+| Database | 17 contacts · 12 Charity · 5 Company · 16 with WhatsApp |
+| Accounts | `wessal` (member) · `Abdo` (admin) — sign-ups are disabled |
+| Site URL in Supabase | `https://mo-abdo28.github.io/wessal-contacts/` |
+
+Everything below has already been done for that project — the steps are kept
+for reference and for anyone who wants to rebuild it.
+
+---
+
 ## What you will do — ملخص سريع
 
 | # | Step | Time |
@@ -36,10 +54,16 @@
 Supabase normally lets anybody create an account. We only want our two logins.
 
 1. In the left menu click the **gear icon** ⚙️ → **Authentication**
-2. Click **Users** → **Enable email sign-ups** → turn it **OFF**
-3. Still in **Authentication**, click **Email** and make sure **Confirm email** is turned **OFF**
+2. Click **Sign In / Providers** → turn **"Allow new users to sign up"** **OFF**
+3. Leave **"Allow anonymous sign-ins"** OFF
 
-That stops anyone else from registering, and stops Supabase sending confirmation emails to the fake addresses.
+That stops anyone else from registering.
+
+> **About "Confirm email":** it may stay **ON**. The two accounts created by
+> `02_create_accounts.sql` are marked as confirmed already (`email_confirmed_at`
+> is set), so they sign in straight away with no email needed. If you create an
+> account by hand instead, tick **Auto Confirm User** — otherwise that account
+> cannot sign in.
 
 ---
 
@@ -178,6 +202,16 @@ You have **two** ways. Pick either.
 ## Step 6 — Put the website online (النشر)
 
 The site has **no build step** — it is plain HTML/CSS/JS. So publishing is just uploading a folder.
+
+### GitHub Pages (what this project uses)
+
+1. Push the **`public`** folder to a branch called `gh-pages` (the files sit at the
+   branch root, next to a `.nojekyll` file).
+2. In the repository: **Settings → Pages → Build and deployment → Source** →
+   **Deploy from a branch** → branch `gh-pages`, folder `/ (root)`.
+3. The site is then at `https://<your-user>.github.io/<repo>/`.
+4. Add that address to Supabase → **Authentication → URL Configuration**
+   (Site URL + Redirect URLs), exactly like the notes below.
 
 ### Netlify (easiest)
 

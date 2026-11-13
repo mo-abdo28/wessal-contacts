@@ -8,6 +8,17 @@ call buttons, backed by Supabase with database-level permissions.
 
 ---
 
+## Live site (الموقع الحي)
+
+**https://mo-abdo28.github.io/wessal-contacts/**
+
+Sign in with your team account. The directory is backed by a free Supabase
+project, and every permission is enforced by the database itself.
+
+الموقع شغّال — سجّل دخول بحسابك والفريق بيشتغل على داتابيز Supabase مجانية.
+
+---
+
 ## Quick start (البدء السريع)
 
 ```powershell
@@ -81,6 +92,8 @@ Permissions are enforced by **Row Level Security** in Postgres, not by the UI:
 
 The `anon` role has no grants at all, so a visitor who is not logged in cannot read
 or write any contact data — even if they craft their own API requests.
+Self-registration is also switched off in Supabase, so the only two accounts that
+can ever sign in are `wessal` and `Abdo`.
 
 ---
 
@@ -118,3 +131,7 @@ wessal-contacts/
 - **Offline preview mode** — with no credentials in `config.js` the app runs
   entirely in the browser with the sample data, so you can look around before
   touching Supabase.
+- **The SQL files are formatted for copy-paste.** Every opening parenthesis is
+  closed on the same line as it opens. Some SQL editors auto-close brackets and
+  leave a stray `)` behind when the matching `)` is on a later line, which makes
+  the pasted script fail to parse. Keeping the pairs on one line avoids that.

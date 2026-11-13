@@ -27,6 +27,11 @@
 -- auto-closing bracket leaving a stray ")" behind.
 -- =====================================================================
 
+-- The category list the admin can rename in the app. The contacts below
+-- use "Company" and "Charity"; the rest are there so you have something
+-- to rename or delete. Safe to run more than once.
+insert into public.categories (name, sort_order) select c.name, c.i from (values ('Client',0),('Organization',1),('Supplier',2),('Company',3),('Charity',4),('Other',5)) as c(name,i) on conflict (name) do nothing;
+
 insert into public.contacts (name, organization, phone, phone_secondary, has_whatsapp, category, notes, created_by_name, created_at) select 'Mohamed Nour', 'V7', '201002135438', null, true, 'Company', 'BD', 'Abdo', now() where not exists (select 1 from public.contacts c where c.organization = 'V7' and c.phone = '201002135438');
 insert into public.contacts (name, organization, phone, phone_secondary, has_whatsapp, category, notes, created_by_name, created_at) select 'Mohanad Elbibany', 'Redbull', '201275706666', null, true, 'Company', '', 'Abdo', now() where not exists (select 1 from public.contacts c where c.organization = 'Redbull' and c.phone = '201275706666');
 insert into public.contacts (name, organization, phone, phone_secondary, has_whatsapp, category, notes, created_by_name, created_at) select 'Marwa', 'Cocacola', '201025595425', null, true, 'Company', '', 'Abdo', now() where not exists (select 1 from public.contacts c where c.organization = 'Cocacola' and c.phone = '201025595425');
@@ -51,3 +56,5 @@ insert into public.contacts (name, organization, phone, phone_secondary, has_wha
 select count(*) as total_contacts, count(*) filter (where has_whatsapp) as with_whatsapp, count(*) filter (where not has_whatsapp) as without_whatsapp from public.contacts;
 
 select category, count(*) as n from public.contacts group by category order by n desc;
+
+select name, sort_order from public.categories order by sort_order;
